@@ -14,6 +14,7 @@ import DashboardPedidos from "@/pages/DashboardPedidos";
 import DashboardProductos from "@/pages/DashboardProductos";
 import TiendaPage from "@/pages/TiendaPage";
 import MisPedidosPage from "@/pages/MisPedidosPage";
+import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
