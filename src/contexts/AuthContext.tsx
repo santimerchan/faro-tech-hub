@@ -56,8 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(() => fetchPerfil(u.id), 0);
         } else {
           setPerfil(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
