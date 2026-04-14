@@ -51,6 +51,7 @@ const App = () => (
                 <Route index element={<Navigate to="/tienda" replace />} />
               </Route>
 
+              <Route path="/" element={<Index />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
