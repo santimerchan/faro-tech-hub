@@ -10,7 +10,7 @@ import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LoginPage() {
-  const { user, rol, loading } = useAuth();
+  const { user, rol, loading, refreshSession } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,13 +26,41 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setSubmitting(true);
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-    if (err) {
-      setError('Credenciales incorrectas. Verifica tu email y contraseña.');
+    try {
+      const { data: signData, error: err } = await supabase.auth.signInWithPassword({ email, password });
+      if (err) {
+        setError('Credenciales incorrectas. Verifica tu email y contraseña.');
+      } else {
+        // Pasar la sesión del login evita una condición de carrera: getSession()
+        // a veces aún no ve la sesión recién creada y el SELECT a perfiles va sin JWT.
+        const { rol: r, perfilErrorCode, perfilErrorMessage } = await refreshSession(
+          signData.session ?? undefined
+        );
+        if (r) {
+          toast.success('Sesión iniciada correctamente');
+          navigate(r === 'cliente' ? '/tienda' : '/dashboard', { replace: true });
+        } else {
+          const supabaseHost = import.meta.env.VITE_SUPABASE_URL ?? '';
+          const hintProyecto =
+            'Confirma que ejecutaste el SQL en el mismo proyecto que tu .env (URL: ' +
+            supabaseHost +
+            '). ';
+          if (perfilErrorCode === 'PGRST116') {
+            toast.error(
+              hintProyecto +
+                'No hay fila en public.perfiles con id = tu UUID de Authentication, o el id no coincide.'
+            );
+          } else {
+            toast.error(
+              hintProyecto +
+                (perfilErrorMessage ??
+                  'No se pudo leer perfiles (¿RLS?). Detalle: ' + (perfilErrorCode ?? 'desconocido'))
+            );
+          }
+        }
+      }
+    } finally {
       setSubmitting(false);
-    } else {
-      toast.success('Sesión iniciada correctamente');
-      // Redirect is handled by AuthContext + Navigate above on re-render
     }
   };
 

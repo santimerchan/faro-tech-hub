@@ -20,9 +20,25 @@ export default function MisPedidosPage() {
   const [historial, setHistorial] = useState<any[]>([]);
 
   const fetchPedidos = useCallback(async () => {
-    if (!perfil) return;
-    const { data, error: err } = await supabase.from('pedidos').select('*').eq('cliente_id', perfil.id).order('created_at', { ascending: false });
-    if (err) { setError('Error al cargar tus pedidos'); setLoading(false); return; }
+    if (!perfil?.id) {
+      setLoading(false);
+      setError('No hay perfil de cliente cargado. Cierra sesión y entra con una cuenta cliente, o usa el panel admin para ver todos los pedidos.');
+      return;
+    }
+    setError('');
+    const { data, error: err } = await supabase
+      .from('pedidos')
+      .select('*')
+      .eq('cliente_id', perfil.id)
+      .order('created_at', { ascending: false });
+    if (import.meta.env.DEV && err) {
+      console.debug('[Faro MisPedidos]', 'pedidos.select', { code: err.code, message: err.message, details: err.details });
+    }
+    if (err) {
+      setError(`Error al cargar pedidos (${err.code ?? 'unknown'}): ${err.message}`);
+      setLoading(false);
+      return;
+    }
     setPedidos(data ?? []);
     setLoading(false);
   }, [perfil]);

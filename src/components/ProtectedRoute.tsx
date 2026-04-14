@@ -19,7 +19,13 @@ export default function ProtectedRoute({ children, allowedRoles }: Props) {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  if (allowedRoles && rol && !allowedRoles.includes(rol)) {
+  // Si hay rol restringido y aún no hay `rol`, no abrir la ruta (evita pantallas
+  // colgadas en páginas que hacen `if (!perfil) return` sin bajar loading).
+  if (allowedRoles && !rol) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles && !allowedRoles.includes(rol!)) {
     if (rol === 'cliente') return <Navigate to="/tienda" replace />;
     return <Navigate to="/dashboard" replace />;
   }
