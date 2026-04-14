@@ -1,7 +1,12 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function Index() {
+type Props = {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+};
+
+export default function ProtectedRoute({ children, allowedRoles }: Props) {
   const { user, rol, loading } = useAuth();
 
   if (loading) {
@@ -13,6 +18,11 @@ export default function Index() {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (rol === 'cliente') return <Navigate to="/tienda" replace />;
-  return <Navigate to="/dashboard" replace />;
+
+  if (allowedRoles && rol && !allowedRoles.includes(rol)) {
+    if (rol === 'cliente') return <Navigate to="/tienda" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
 }
